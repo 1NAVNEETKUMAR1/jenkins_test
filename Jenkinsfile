@@ -17,6 +17,7 @@ pipeline {
 		    steps {
 			    sh 'echo "new stage"'
 		    }
+	    }
         stage('Build') {
             steps {
                // Run Maven on a Unix agent.

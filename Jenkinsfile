@@ -1,6 +1,8 @@
-agent {
-	    label 'linux'
-    }
+pipeline {
+   agent {
+	   label 'windows'
+   }
+
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
         maven "MVN3"
@@ -15,16 +17,16 @@ agent {
 			}
 	    stage ('print stage') {
 		    steps {
-			    sh 'echo "new stage"'
+			    bat 'echo "new stage"'
 		    }
 	    }
         stage('Build') {
             steps {
                // Run Maven on a Unix agent.
-                sh "mvn -Dmaven.test.failure.ignore=true -f api-gateway clean package"
+                //sh "mvn -Dmaven.test.failure.ignore=true -f api-gateway clean package"
 
                 // To run Maven on a Windows agent, use
-                // bat "mvn -Dmaven.test.failure.ignore=true clean package"
+                bat "mvn -Dmaven.test.failure.ignore=true -f api-gateway clean package"
             }
 
             post {
@@ -32,9 +34,14 @@ agent {
                 // failed, record the test results and archive the jar file.
                 success {
                     junit stdioRetention: '', testResults: 'api-gateway/target/surefire-reports/*.xml'
-                    archiveArtifacts artifacts: 'api-gateway/target/*.jar', followSymlinks: false
+                    archiveArtifacts 'api-gateway/target/*.jar'
                 }
             }
         }
+    }
+    post {
+	success {
+            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "navneetchoudhary1110@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
+        }  
     }
 }

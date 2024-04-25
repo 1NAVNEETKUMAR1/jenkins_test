@@ -1,6 +1,8 @@
 pipeline {
-   agent any
-
+   agent {
+	   label 'linux'
+   }
+	
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
         maven "MVN3"
@@ -49,7 +51,7 @@ pipeline {
 	    stage('sonar quality gate') {
 		    steps {
 			    script {
-				    sleep(40)
+				    sleep(60)
 				    qg = waitForQualityGate()
 				    if (qg.status != 'OK') {
 					    error "pipeline aborted due to quality gate failure: ${qg.status}"
@@ -57,10 +59,24 @@ pipeline {
 			    }
 		    }
 	    }
+	    stage('dependency check') {
+		    steps {
+			    script {
+				    sh '''
+					sudo rm -rf $PWD/report/* || true
+     					sudo chmod -R 777 $PWD
+     					sudo mkdir -p $PWD/OWASP-Dependency-Check/data
+	 				sudo mkdir -p $PWD/report
+      					sudo chmod 777 $PWD/OWASP-Dependency-Check/data
+	   				sudo chmod 777 $PWD/report
+					sudo docker run --rm -v $PWD:/src:z -v $PWD/OWASP-Dependency-Check/data:/usr/share/dependency-check/data:z -v $PWD/report:/report:z owasp/dependency-check --scan /src --format "ALL"  --project "devsecops" --out /report '''
+			    }
+		    }
+	    }	    
     }
     post {
 	success {
-            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "navneetchoudhary1110@gmail.com@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
+            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "navneetchoudhary1110@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
         }  
     }
 }

@@ -72,7 +72,13 @@ pipeline {
 					sudo docker run --rm -v $PWD:/src:z -v $PWD/OWASP-Dependency-Check/data:/usr/share/dependency-check/data:z -v $PWD/report:/report:z owasp/dependency-check --scan /src --format "ALL"  --project "devsecops" --out /report '''
 			    }
 		    }
-	    }	    
+	    }	
+	    post {
+		    success {
+			    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+		    }
+	    	}
+	  }
     }
     post {
 	success {

@@ -1,4 +1,4 @@
-pipeline {
+ pipeline {
    agent {
 	   label 'linux'
    }
@@ -12,7 +12,7 @@ pipeline {
 	    stage ('scm') {
 		    steps {
 			    // Get some code from a GitHub repository
-                git credentialsId: 'github', url: 'git@github.com:sathishbob/jenkins_test.git'
+                git credentialsId: 'github', url: 'git@github.com:1NAVNEETKUMAR1/jenkins_test.git'
 				}
 			}
 	    stage ('print stage') {
@@ -134,11 +134,35 @@ pipeline {
 					sudo docker run --rm -v $(pwd)/vapt:/openvas/results/ sathishbob/openvas /openvas/run_scan.py 123.123.123.123 openvas_scan_report -u root -p password'''
 			    }
 		    }
+		    post {
+		    success {
+			    publishHTML target: [
+              				allowMissing: false,
+              				alwaysLinkToLastBuild: true,
+              				keepAll: true,
+              				reportDir: 'vapt',
+              				reportFiles: 'openvas_scan_report.html',
+              				reportName: 'VAPT_Report'
+              			]
+		    }
+	    	}
 	  }
+	  stage('vapt quality gate') {
+		    steps {
+			    script {
+				    def criticaloutput = sh(script: 'cat vapt/openvas_scan_report.xml | grep -i high | wc -l', returnStdout: true).trim()
+				    def criticalnumber = criticaloutput.toInteger()
+				    def criticalthreshold = 1
+				    if( criticalnumber > criticalthreshold) {
+					    error("dast failled, so aborting the build")
+				    }
+			    }
+		    }
+	    }
     }
     post {
 	success {
-            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "sathishbabudevops@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
+            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "navneetchoudhary1110@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
         }  
     }
 }

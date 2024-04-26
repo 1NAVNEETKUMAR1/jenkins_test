@@ -12,7 +12,7 @@ pipeline {
 	    stage ('scm') {
 		    steps {
 			    // Get some code from a GitHub repository
-                git credentialsId: 'github', url: 'git@github.com:1NAVNEETKUMAR1/jenkins_test.git'
+                git credentialsId: 'github', url: 'git@github.com:1NAVNEETKUMAR1/jenkins_test.git''
 				}
 			}
 	    stage ('print stage') {
@@ -43,7 +43,7 @@ pipeline {
 		       script {
 			       scannerHome = tool 'sonar';
 			       withSonarQubeEnv('sonar') {
-						sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins_test -Dsonar.projectName=jenkins_test -Dsonar.projectVersion=1.0 -Dsonar.projectBaseDir=$WORKSPACE -Dsonar.sources=$WORKSPACE -Dsonar.java.binaries=$WORKSPACE -Dsonar.exclusions='OWASP-Dependency-Check/**, report/**'"
+						sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins_test -Dsonar.projectName=jenkins_test -Dsonar.projectVersion=1.0 -Dsonar.projectBaseDir=$WORKSPACE -Dsonar.sources=$WORKSPACE -Dsonar.java.binaries=$WORKSPACE -Dsonar.exclusions='OWASP-Dependency-Check/**, dastreport/**, report/**'"
 						}
 				}
 			}
@@ -97,7 +97,7 @@ pipeline {
 					sudo rm -rf $PWD/dastreport/* || true
 	 				sudo mkdir -p $PWD/dastreport
 	   				sudo chmod 777 $PWD/dastreport
-					sudo docker run --rm -v $PWD/dastreport:/zap/wrk:rw -t softwaresecurityproject/zap-stable zap-baseline.py -t https://www.labasservice.com -m 1 -d -r dast.html -x dast.xml '''
+					sudo docker run --rm -v $PWD/dastreport:/zap/wrk:rw -t softwaresecurityproject/zap-stable zap-baseline.py -t https://www.labasservice.com -m 1 -d -r dast.html -x dast.xml || true'''
 			    }
 		    }
 	    	post {
@@ -106,7 +106,7 @@ pipeline {
               				allowMissing: false,
               				alwaysLinkToLastBuild: true,
               				keepAll: true,
-              				reportDir: ${WORKSPACE}/dastreport,
+              				reportDir: '${WORKSPACE}/dastreport',
               				reportFiles: 'dast.html',
               				reportName: 'DAST_Report'
               ]

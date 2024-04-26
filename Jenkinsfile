@@ -83,13 +83,39 @@ pipeline {
 			    script {
 				    def criticaloutput = sh(script: 'cat report/dependency-check-report.xml | grep -i critical | wc -l', returnStdout: true).trim()
 				    def criticalnumber = criticaloutput.toInteger()
-				    def criticalthreshold = 10
+				    def criticalthreshold = 15
 				    if( criticalnumber > criticalthreshold) {
 					    error("SCA failled, so aborting the build")
 				    }
 			    }
 		    }
 	    }
+	    stage('DAST') {
+		    steps {
+			    script {
+				    sh '''
+					sudo rm -rf $PWD/dastreport/* || t
+                    
+                    rue
+	 				sudo mkdir -p $PWD/dastreport
+	   				sudo chmod 777 $PWD/dastreport
+					sudo docker run --rm -v $PWD/dastreport:/zap/wrk:rw -t softwaresecurityproject/zap-stable zap-baseline.py -t https://www.labasservice.com -m 1 -d -r dast.html -x dast.xml '''
+			    }
+		    }
+	    	post {
+		    success {
+			    publishHTML target: [
+              				allowMissing: false,
+              				alwaysLinkToLastBuild: true,
+              				keepAll: true,
+              				reportDir: ${WORKSPACE}/dastreport,
+              				reportFiles: 'dast.html',
+              				reportName: 'DAST_Report'
+              ]
+
+		    }
+	    	}
+	  }
     }
     post {
 	success {

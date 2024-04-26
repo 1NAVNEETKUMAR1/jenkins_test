@@ -12,7 +12,7 @@ pipeline {
 	    stage ('scm') {
 		    steps {
 			    // Get some code from a GitHub repository
-                git credentialsId: 'github', url: 'git@github.com:1NAVNEETKUMAR1/jenkins_test.git'
+                git credentialsId: 'github', url: 'git@github.com:sathishbob/jenkins_test.git'
 				}
 			}
 	    stage ('print stage') {
@@ -43,7 +43,7 @@ pipeline {
 		       script {
 			       scannerHome = tool 'sonar';
 			       withSonarQubeEnv('sonar') {
-						sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins_test -Dsonar.projectName=jenkins_test -Dsonar.projectVersion=1.0 -Dsonar.projectBaseDir=$WORKSPACE -Dsonar.sources=$WORKSPACE -Dsonar.java.binaries=$WORKSPACE -Dsonar.exclusions='OWASP-Dependency-Check/**, dastreport/**, report/**'"
+						sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins_test -Dsonar.projectName=jenkins_test -Dsonar.projectVersion=1.0 -Dsonar.projectBaseDir=$WORKSPACE -Dsonar.sources=$WORKSPACE -Dsonar.java.binaries=$WORKSPACE -Dsonar.exclusions='OWASP-Dependency-Check/**, dastreport/**, vapt/**, report/**'"
 						}
 				}
 			}
@@ -114,10 +114,31 @@ pipeline {
 		    }
 	    	}
 	  }
+	  stage('dast quality gate') {
+		    steps {
+			    script {
+				    def criticaloutput = sh(script: 'cat dastreport/dast.xml | grep -i high | wc -l', returnStdout: true).trim()
+				    def criticalnumber = criticaloutput.toInteger()
+				    def criticalthreshold = 4
+				    if( criticalnumber > criticalthreshold) {
+					    error("dast failled, so aborting the build")
+				    }
+			    }
+		    }
+	    }
+	    stage('VAPT') {
+		    steps {
+			    script {
+				    sh '''
+	   				sudo chmod 777 $PWD/vapt
+					sudo docker run --rm -v $(pwd)/vapt:/openvas/results/ sathishbob/openvas /openvas/run_scan.py 123.123.123.123 openvas_scan_report -u root -p password'''
+			    }
+		    }
+	  }
     }
     post {
 	success {
-            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "navneetchoudhary1110@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
+            emailext body: "Please check console aouput at $BUILD_URL for more information\n", to: "sathishbabudevops@gmail.com", subject: 'Jenkinstraining - $PROJECT_NAME build completed sucessfully - Build number is $BUILD_NUMBER - Build status is $BUILD_STATUS' 
         }  
     }
 }
